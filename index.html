@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PaperLeads — Kanban</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
     --bg:       #F4F5F7;
@@ -17,312 +18,68 @@
     --radius:   10px;
     --shadow:   0 1px 3px rgba(23,43,77,0.10), 0 4px 12px rgba(23,43,77,0.06);
     --shadow-drag: 0 8px 32px rgba(23,43,77,0.18);
-
     --new-bg:   #EFF6FF; --new-border: #BFDBFE; --new-text: #1D4ED8; --new-dot: #3B82F6;
     --con-bg:   #FFFBEB; --con-border: #FDE68A; --con-text: #B45309; --con-dot: #F59E0B;
     --quo-bg:   #F5F3FF; --quo-border: #DDD6FE; --quo-text: #6D28D9; --quo-dot: #8B5CF6;
     --won-bg:   #F0FDF4; --won-border: #BBF7D0; --won-text: #15803D; --won-dot: #22C55E;
     --los-bg:   #FFF1F2; --los-border: #FECDD3; --los-text: #BE123C; --los-dot: #F43F5E;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Inter', system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--ink);
-    min-height: 100vh;
-    font-size: 14px;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-  }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
 
   /* ── HEADER ── */
-  header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0 24px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .logo {
-    font-family: 'Fraunces', serif;
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--ink);
-    letter-spacing: -0.3px;
-  }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; gap: 12px; }
+  .logo { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; color: var(--ink); letter-spacing: -0.3px; white-space: nowrap; }
   .logo em { color: var(--accent); font-style: normal; }
-  .header-right { display: flex; align-items: center; gap: 10px; }
-  .header-date { font-size: 13px; color: var(--ink-3); }
+  .header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .header-date { font-size: 13px; color: var(--ink-3); white-space: nowrap; }
 
   /* ── TOOLBAR ── */
-  .toolbar {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 10px 24px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: opacity 0.15s, transform 0.1s;
-    white-space: nowrap;
-  }
+  .toolbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 24px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .btn-primary { background: var(--accent); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: opacity 0.15s, transform 0.1s; white-space: nowrap; }
   .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
   .btn-primary:active { transform: translateY(0); }
-  .search-box {
-    flex: 1;
-    min-width: 180px;
-    max-width: 300px;
-    padding: 8px 12px 8px 34px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238590A2' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center;
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    color: var(--ink);
-    outline: none;
-    transition: border-color 0.15s;
-  }
+  .search-box { flex: 1; min-width: 180px; max-width: 300px; padding: 8px 12px 8px 34px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238590A2' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--ink); outline: none; transition: border-color 0.15s; }
   .search-box:focus { border-color: var(--accent); background-color: #fff; }
-  .filter-select {
-    padding: 8px 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--bg);
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    color: var(--ink);
-    cursor: pointer;
-    outline: none;
-    transition: border-color 0.15s;
-  }
+  .filter-select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); font-family: 'Inter', sans-serif; font-size: 13px; color: var(--ink); cursor: pointer; outline: none; }
   .filter-select:focus { border-color: var(--accent); }
-  .toolbar-right { display: flex; gap: 8px; margin-left: auto; align-items: center; }
-  .btn-sm {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 7px 12px;
-    border-radius: 8px;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    color: var(--ink-2);
-    transition: background 0.1s, border-color 0.15s;
-    white-space: nowrap;
+  .btn-sm { background: var(--surface); border: 1px solid var(--border); padding: 7px 12px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--ink-2); transition: background 0.1s; white-space: nowrap; }
+  .btn-sm:hover { background: var(--bg); }
+  .btn-sm.end-session { background: #172B4D; color: #fff; border-color: #172B4D; }
+  .btn-sm.end-session:hover { background: #0f1e36; }
+  .btn-sm.excel { background: #1D6F42; color: #fff; border-color: #1D6F42; }
+  .btn-sm.excel:hover { background: #155234; }
+
+  /* ── EXCEL BANNER ── */
+  .excel-banner {
+    display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #1D6F42; color: #fff; border-radius: 10px;
+    padding: 12px 20px; font-size: 13px; font-weight: 500;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2); z-index: 998;
+    align-items: center; gap: 12px; white-space: nowrap;
+    animation: slideUp 0.3s cubic-bezier(0.22,1,0.36,1);
   }
-  .btn-sm:hover { background: var(--bg); border-color: var(--ink-3); }
+  .excel-banner.show { display: flex; }
+  .excel-banner a { color: #fff; font-weight: 700; text-decoration: underline; cursor: pointer; }
+  .excel-banner-close { background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 16px; padding: 0 4px; }
 
   /* ── BOARD ── */
-  .board-wrap {
-    padding: 20px 24px;
-    overflow-x: auto;
-    min-height: calc(100vh - 121px);
-  }
-  .board {
-    display: flex;
-    gap: 14px;
-    align-items: flex-start;
-    min-width: max-content;
-  }
+  .board-wrap { padding: 20px 24px; overflow-x: auto; min-height: calc(100vh - 121px); }
+  .board { display: flex; gap: 14px; align-items: flex-start; min-width: max-content; }
 
   /* ── COLUMN ── */
-  .col {
-    width: 272px;
-    min-width: 272px;
-    background: var(--bg);
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    max-height: calc(100vh - 160px);
-  }
-  .col-header {
-    padding: 12px 14px 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-  }
+  .col { width: 272px; min-width: 272px; background: var(--bg); border-radius: 12px; display: flex; flex-direction: column; max-height: calc(100vh - 160px); }
+  .col-header { padding: 12px 14px 10px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .col-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .col-title { font-size: 13px; font-weight: 700; letter-spacing: 0.03em; flex: 1; }
-  .col-count {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 20px;
-    background: rgba(0,0,0,0.07);
-    color: var(--ink-2);
-  }
-  .col-add {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--ink-3);
-    font-size: 18px;
-    line-height: 1;
-    padding: 2px 4px;
-    border-radius: 4px;
-    transition: background 0.1s, color 0.1s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  .col-count { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 20px; background: rgba(0,0,0,0.07); color: var(--ink-2); }
+  .col-add { background: none; border: none; cursor: pointer; color: var(--ink-3); font-size: 18px; line-height: 1; padding: 2px 4px; border-radius: 4px; transition: background 0.1s, color 0.1s; display: flex; align-items: center; justify-content: center; }
   .col-add:hover { background: rgba(0,0,0,0.07); color: var(--ink); }
-
-  .col-cards {
-    padding: 4px 10px 10px;
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-height: 80px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
+  .col-cards { padding: 4px 10px 10px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-height: 80px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
   .col-cards::-webkit-scrollbar { width: 4px; }
   .col-cards::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-  /* Drop target highlight */
-  .col-cards.drag-over {
-    background: rgba(196, 87, 26, 0.06);
-    border-radius: 8px;
-    outline: 2px dashed var(--accent);
-    outline-offset: -4px;
-  }
-  .col-empty {
-    text-align: center;
-    padding: 24px 12px;
-    color: var(--ink-3);
-    font-size: 12px;
-    border: 2px dashed var(--border);
-    border-radius: 8px;
-    pointer-events: none;
-  }
-
-  /* ── CARD ── */
-  .card {
-    background: var(--surface);
-    border-radius: 10px;
-    padding: 12px 14px;
-    box-shadow: var(--shadow);
-    cursor: grab;
-    user-select: none;
-    border: 1px solid var(--border);
-    transition: box-shadow 0.15s, transform 0.15s, opacity 0.15s;
-    position: relative;
-  }
-  .card:hover { box-shadow: 0 4px 16px rgba(23,43,77,0.13); transform: translateY(-1px); }
-  .card:active { cursor: grabbing; }
-  .card.dragging {
-    opacity: 0.45;
-    transform: scale(0.97);
-  }
-  .card-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-  .card-contact { font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.3; }
-  .card-company { font-size: 12px; color: var(--ink-3); margin-top: 1px; }
-  .card-menu-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--ink-3);
-    font-size: 16px;
-    padding: 2px 4px;
-    border-radius: 4px;
-    line-height: 1;
-    flex-shrink: 0;
-    transition: background 0.1s, color 0.1s;
-  }
-  .card-menu-btn:hover { background: var(--bg); color: var(--ink); }
-
-  .card-paper {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--ink);
-    margin-bottom: 4px;
-  }
-  .card-meta {
-    font-size: 12px;
-    color: var(--ink-2);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 10px;
-    margin-bottom: 10px;
-  }
-  .card-meta span { display: flex; align-items: center; gap: 3px; }
-
-  .card-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 8px;
-    border-top: 1px solid var(--border);
-  }
-  .source-tag {
-    font-size: 11px;
-    font-weight: 500;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 2px 7px;
-    color: var(--ink-2);
-  }
-  .card-date { font-size: 11px; color: var(--ink-3); }
-  .card-actions { display: flex; gap: 4px; }
-  .card-action-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 3px 5px;
-    border-radius: 4px;
-    font-size: 12px;
-    color: var(--ink-3);
-    transition: background 0.1s, color 0.1s;
-  }
-  .card-action-btn:hover { background: var(--bg); color: var(--ink); }
-  .card-action-btn.del:hover { background: #FFF1F2; color: #BE123C; }
-
-  .card-notes-preview {
-    font-size: 12px;
-    color: var(--ink-2);
-    background: var(--bg);
-    border-radius: 6px;
-    padding: 6px 8px;
-    margin-bottom: 8px;
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  /* Status colours applied as col classes */
+  .col-cards.drag-over { background: rgba(196,87,26,0.06); border-radius: 8px; outline: 2px dashed var(--accent); outline-offset: -4px; }
+  .col-empty { text-align: center; padding: 24px 12px; color: var(--ink-3); font-size: 12px; border: 2px dashed var(--border); border-radius: 8px; pointer-events: none; }
   .col[data-status="New"]       .col-dot  { background: var(--new-dot); }
   .col[data-status="New"]       .col-title { color: var(--new-text); }
   .col[data-status="Contacted"] .col-dot  { background: var(--con-dot); }
@@ -334,85 +91,71 @@
   .col[data-status="Lost"]      .col-dot  { background: var(--los-dot); }
   .col[data-status="Lost"]      .col-title { color: var(--los-text); }
 
+  /* ── CARD ── */
+  .card { background: var(--surface); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow); cursor: grab; user-select: none; border: 1px solid var(--border); transition: box-shadow 0.15s, transform 0.15s, opacity 0.15s; position: relative; }
+  .card:hover { box-shadow: 0 4px 16px rgba(23,43,77,0.13); transform: translateY(-1px); }
+  .card:active { cursor: grabbing; }
+  .card.dragging { opacity: 0.45; transform: scale(0.97); }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .card-contact { font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+  .card-company { font-size: 12px; color: var(--ink-3); margin-top: 1px; }
+  .card-menu-btn { background: none; border: none; cursor: pointer; color: var(--ink-3); font-size: 16px; padding: 2px 4px; border-radius: 4px; line-height: 1; flex-shrink: 0; transition: background 0.1s, color 0.1s; }
+  .card-menu-btn:hover { background: var(--bg); color: var(--ink); }
+  .card-paper { font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+  .card-meta { font-size: 12px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 4px 10px; margin-bottom: 10px; }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 8px; border-top: 1px solid var(--border); }
+  .source-tag { font-size: 11px; font-weight: 500; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; color: var(--ink-2); }
+  .card-date { font-size: 11px; color: var(--ink-3); }
+  .card-action-btn { background: none; border: none; cursor: pointer; padding: 3px 5px; border-radius: 4px; font-size: 12px; color: var(--ink-3); transition: background 0.1s, color 0.1s; }
+  .card-action-btn:hover { background: var(--bg); color: var(--ink); }
+  .card-action-btn.del:hover { background: #FFF1F2; color: #BE123C; }
+  .card-notes-preview { font-size: 12px; color: var(--ink-2); background: var(--bg); border-radius: 6px; padding: 6px 8px; margin-bottom: 8px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
   /* ── MODAL ── */
-  .overlay {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(23,43,77,0.45);
-    backdrop-filter: blur(3px);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(23,43,77,0.45); backdrop-filter: blur(3px); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
   .overlay.open { display: flex; }
-  .modal {
-    background: var(--surface);
-    border-radius: 14px;
-    width: 100%;
-    max-width: 560px;
-    max-height: 92vh;
-    overflow-y: auto;
-    box-shadow: 0 24px 80px rgba(23,43,77,0.22);
-    animation: slideUp 0.22s cubic-bezier(0.22,1,0.36,1);
-  }
+  .modal { background: var(--surface); border-radius: 14px; width: 100%; max-width: 580px; max-height: 92vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(23,43,77,0.22); animation: slideUp 0.22s cubic-bezier(0.22,1,0.36,1); }
   @keyframes slideUp { from { transform: translateY(18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-  .modal-header {
-    padding: 18px 22px 16px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
+  .modal-header { padding: 18px 22px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
   .modal-header h2 { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; color: var(--ink); }
-  .modal-close {
-    background: var(--bg); border: none; color: var(--ink-3);
-    font-size: 16px; cursor: pointer; line-height: 1;
-    width: 30px; height: 30px; border-radius: 6px;
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.1s, color 0.1s;
-  }
+  .modal-close { background: var(--bg); border: none; color: var(--ink-3); font-size: 16px; cursor: pointer; width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: background 0.1s; }
   .modal-close:hover { background: var(--border); color: var(--ink); }
   .modal-body { padding: 20px 22px; }
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .form-group { display: flex; flex-direction: column; gap: 5px; }
   .form-group.full { grid-column: 1 / -1; }
   label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
-  input, select, textarea {
-    padding: 9px 11px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--bg);
-    font-family: 'Inter', sans-serif;
-    font-size: 13.5px;
-    color: var(--ink);
-    outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  input:focus, select:focus, textarea:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(196,87,26,0.10);
-    background: #fff;
-  }
+  input, select, textarea { padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); font-family: 'Inter', sans-serif; font-size: 13.5px; color: var(--ink); outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(196,87,26,0.10); background: #fff; }
   textarea { resize: vertical; min-height: 76px; }
-  .section-divider {
-    font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--ink-3); grid-column: 1 / -1; margin-top: 8px;
-    padding-bottom: 6px; border-bottom: 1px solid var(--border);
-  }
-  .modal-footer {
-    padding: 14px 22px;
-    border-top: 1px solid var(--border);
-    display: flex; justify-content: flex-end; gap: 10px;
-    background: var(--bg); border-radius: 0 0 14px 14px;
-  }
-  .btn-ghost {
-    background: none; border: 1px solid var(--border);
-    padding: 8px 16px; border-radius: 8px;
-    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
-    cursor: pointer; color: var(--ink-2); transition: background 0.1s;
-  }
+  .section-divider { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); grid-column: 1 / -1; margin-top: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .modal-footer { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: var(--bg); border-radius: 0 0 14px 14px; }
+  .btn-ghost { background: none; border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--ink-2); transition: background 0.1s; }
   .btn-ghost:hover { background: var(--surface); }
+
+  /* ── CONTACT PICKER ── */
+  .contact-picker { grid-column: 1 / -1; background: #EFF6FF; border: 1.5px solid #BFDBFE; border-radius: 10px; padding: 14px; margin-bottom: 4px; }
+  .cp-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: #1D4ED8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .cp-search-wrap { position: relative; }
+  .cp-input { width: 100%; padding: 9px 11px 9px 34px; border: 1px solid #BFDBFE; border-radius: 8px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238590A2' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center; font-family: 'Inter', sans-serif; font-size: 13.5px; color: var(--ink); outline: none; transition: border-color 0.15s; }
+  .cp-input:focus { border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+  .cp-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 32px rgba(23,43,77,0.14); z-index: 300; max-height: 220px; overflow-y: auto; display: none; }
+  .cp-dropdown.open { display: block; }
+  .cp-item { padding: 10px 14px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  .cp-item:last-child { border-bottom: none; }
+  .cp-item:hover { background: #EFF6FF; }
+  .cp-item-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .cp-item-meta { font-size: 12px; color: var(--ink-3); }
+  .cp-none { padding: 12px 14px; font-size: 13px; color: var(--ink-3); text-align: center; }
+  .cp-selected { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #BFDBFE; border-radius: 8px; padding: 8px 12px; margin-top: 8px; }
+  .cp-selected-info { flex: 1; }
+  .cp-selected-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .cp-selected-meta { font-size: 12px; color: var(--ink-3); }
+  .cp-clear { background: none; border: none; color: var(--ink-3); cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; }
+  .cp-clear:hover { background: var(--border); color: var(--ink); }
+  .save-contact-row { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; }
+  .save-contact-row input[type=checkbox] { width: 15px; height: 15px; accent-color: #15803D; cursor: pointer; }
+  .save-contact-row label { font-size: 13px; font-weight: 500; color: #15803D; text-transform: none; letter-spacing: 0; cursor: pointer; }
 
   /* ── VIEW MODAL ── */
   .detail-section { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
@@ -423,20 +166,6 @@
   .detail-item .dv { font-size: 14px; color: var(--ink); font-weight: 500; }
   .detail-item .dv a { color: var(--accent); text-decoration: none; }
   .notes-block { background: var(--bg); border-radius: 8px; padding: 12px; font-size: 13.5px; color: var(--ink-2); line-height: 1.7; white-space: pre-wrap; }
-
-  /* ── TOAST ── */
-  .toast {
-    position: fixed; bottom: 24px; right: 24px;
-    background: var(--ink); color: #fff;
-    padding: 10px 18px; border-radius: 8px;
-    font-size: 13px; font-weight: 500;
-    z-index: 999; transform: translateY(60px); opacity: 0;
-    transition: all 0.25s cubic-bezier(0.22,1,0.36,1);
-    pointer-events: none; border-left: 3px solid var(--accent);
-  }
-  .toast.show { transform: translateY(0); opacity: 1; }
-
-  /* ── STATUS PILLS (view modal) ── */
   .spill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; border-radius: 20px; padding: 3px 10px; }
   .s-new       { background: var(--new-bg); color: var(--new-text); border: 1px solid var(--new-border); }
   .s-contacted { background: var(--con-bg); color: var(--con-text); border: 1px solid var(--con-border); }
@@ -444,14 +173,28 @@
   .s-won       { background: var(--won-bg); color: var(--won-text); border: 1px solid var(--won-border); }
   .s-lost      { background: var(--los-bg); color: var(--los-text); border: 1px solid var(--los-border); }
 
-  /* ── RESPONSIVE ── */
+  /* ── CONTACTS BOOK MODAL ── */
+  .contacts-list { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; }
+  .contact-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .contact-avatar { width: 36px; height: 36px; border-radius: 50%; background: #EFF6FF; border: 1px solid #BFDBFE; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #1D4ED8; flex-shrink: 0; }
+  .contact-info { flex: 1; min-width: 0; }
+  .contact-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .contact-meta { font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .contact-del { background: none; border: none; cursor: pointer; color: var(--ink-3); padding: 4px 6px; border-radius: 4px; font-size: 14px; }
+  .contact-del:hover { background: #FFF1F2; color: #BE123C; }
+  .contacts-empty { text-align: center; padding: 40px 20px; color: var(--ink-3); }
+
+  /* ── TOAST ── */
+  .toast { position: fixed; bottom: 80px; right: 24px; background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; z-index: 999; transform: translateY(60px); opacity: 0; transition: all 0.25s cubic-bezier(0.22,1,0.36,1); pointer-events: none; border-left: 3px solid var(--accent); }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
   @media (max-width: 640px) {
     .form-grid { grid-template-columns: 1fr; }
-    .form-group.full { grid-column: 1; }
+    .form-group.full, .contact-picker, .save-contact-row { grid-column: 1; }
     .detail-grid { grid-template-columns: 1fr; }
-    header { padding: 0 16px; }
-    .toolbar { padding: 10px 16px; }
-    .board-wrap { padding: 14px 16px; }
+    header { padding: 0 14px; gap: 8px; }
+    .toolbar { padding: 10px 14px; }
+    .board-wrap { padding: 14px 12px; }
     .header-date { display: none; }
   }
 </style>
@@ -462,17 +205,16 @@
   <div class="logo">Paper<em>Leads</em></div>
   <div class="header-right">
     <span class="header-date" id="headerDate"></span>
-    <div class="toolbar-right" style="margin-left:0">
-      <button class="btn-sm" onclick="exportCSV()">↓ CSV</button>
-      <button class="btn-sm" onclick="document.getElementById('importFile').click()">↑ Import</button>
-      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
-      <button class="btn-sm" onclick="exportJSON()">💾 Backup</button>
-    </div>
+    <button class="btn-sm" onclick="openContactsBook()" title="View all contacts">👥 Contacts</button>
+    <button class="btn-sm excel" onclick="downloadMasterExcel()">📊 Export Excel</button>
+    <button class="btn-sm end-session" onclick="endSession()">⏹ End Session</button>
+    <button class="btn-sm" onclick="document.getElementById('importFile').click()">↑ Import</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
   </div>
 </header>
 
 <div class="toolbar">
-  <button class="btn-primary" onclick="openModal(null, null)">
+  <button class="btn-primary" onclick="openModal(null,null)">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     New Lead
   </button>
@@ -487,10 +229,17 @@
     <option value="Other">Other</option>
   </select>
   <span id="totalCount" style="font-size:13px;color:var(--ink-3);margin-left:4px"></span>
+  <span id="sessionCount" style="font-size:13px;color:#15803D;font-weight:600;margin-left:4px"></span>
 </div>
 
 <div class="board-wrap">
   <div class="board" id="board"></div>
+</div>
+
+<!-- Excel saved banner -->
+<div class="excel-banner" id="excelBanner">
+  📊 Excel updated — <a onclick="downloadMasterExcel()">download latest</a>
+  <button class="excel-banner-close" onclick="hideExcelBanner()">✕</button>
 </div>
 
 <!-- ADD / EDIT MODAL -->
@@ -502,10 +251,32 @@
     </div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="section-divider">Contact</div>
+
+        <!-- Contact Picker -->
+        <div class="contact-picker" id="contactPickerBox">
+          <div class="cp-heading">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Select Existing Contact — or fill in below
+          </div>
+          <div class="cp-search-wrap">
+            <input class="cp-input" id="cpSearch" placeholder="Search by name or company…" oninput="filterContacts(this.value)" onfocus="filterContacts(this.value)" autocomplete="off">
+            <div class="cp-dropdown" id="cpDropdown"></div>
+          </div>
+          <div id="cpSelected" style="display:none">
+            <div class="cp-selected">
+              <div class="cp-selected-info">
+                <div class="cp-selected-name" id="cpSelName"></div>
+                <div class="cp-selected-meta" id="cpSelMeta"></div>
+              </div>
+              <button class="cp-clear" onclick="clearContactPicker()" title="Clear">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-divider">Contact Details</div>
         <div class="form-group">
           <label>Contact Person *</label>
-          <input id="f-contact" placeholder="Full name" required>
+          <input id="f-contact" placeholder="Full name">
         </div>
         <div class="form-group">
           <label>Company / Firm</label>
@@ -541,7 +312,7 @@
           <input id="f-qty" placeholder="e.g. 5 MT, 200 Reams">
         </div>
         <div class="form-group">
-          <label>Destination / City</label>
+          <label>City / Destination</label>
           <input id="f-destination" placeholder="e.g. Mumbai">
         </div>
 
@@ -571,6 +342,13 @@
           <label>Notes / Follow-up</label>
           <textarea id="f-notes" placeholder="Pricing discussed, follow-up date, special requirements…"></textarea>
         </div>
+
+        <!-- Save as Contact -->
+        <div class="save-contact-row" id="saveContactRow">
+          <input type="checkbox" id="f-save-contact" checked>
+          <label for="f-save-contact">Save as contact (reuse in future leads)</label>
+        </div>
+
       </div>
     </div>
     <div class="modal-footer">
@@ -595,50 +373,73 @@
   </div>
 </div>
 
+<!-- CONTACTS BOOK MODAL -->
+<div class="overlay" id="contactsOverlay" onclick="closeContactsOnBg(event)">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h2>Contacts</h2>
+      <button class="modal-close" onclick="closeContactsBook()">✕</button>
+    </div>
+    <div class="modal-body" id="contactsBody"></div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn-sm excel" onclick="downloadContactsExcel()">📊 Export Contacts Excel</button>
+      <button class="btn-ghost" onclick="closeContactsBook()">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-const STORE = 'paperleads_v1';
-const STATUSES = ['New','Contacted','Quoted','Won','Lost'];
-const STATUS_CLASS = { New:'s-new', Contacted:'s-contacted', Quoted:'s-quoted', Won:'s-won', Lost:'s-lost' };
+// ── STORES ──
+const STORE          = 'paperleads_v1';
+const CONTACTS_STORE = 'paperleads_contacts_v1';
+const STATUSES       = ['New','Contacted','Quoted','Won','Lost'];
+const STATUS_CLASS   = { New:'s-new', Contacted:'s-contacted', Quoted:'s-quoted', Won:'s-won', Lost:'s-lost' };
 
-let leads = JSON.parse(localStorage.getItem(STORE) || '[]');
-let editId = null;
-let dragId = null;
+let leads    = JSON.parse(localStorage.getItem(STORE)          || '[]');
+let contacts = JSON.parse(localStorage.getItem(CONTACTS_STORE) || '[]');
+let editId   = null;
+let dragId   = null;
 
-function uid()  { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
-function save() { localStorage.setItem(STORE, JSON.stringify(leads)); }
-function fmt(d) { return new Date(d).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'2-digit'}); }
-function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// Session tracking
+const sessionStart  = Date.now();
+let sessionAdded    = [];   // lead IDs added this session
+let sessionModified = [];   // lead IDs modified this session
+
+function save()         { localStorage.setItem(STORE,          JSON.stringify(leads));    }
+function saveContacts() { localStorage.setItem(CONTACTS_STORE, JSON.stringify(contacts)); }
+function uid()          { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function fmt(d)         { return new Date(d).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'2-digit'}); }
+function esc(s)         { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+  setTimeout(() => t.classList.remove('show'), 2400);
 }
 
 // ── RENDER BOARD ──
 function render() {
   const q   = document.getElementById('searchBox').value.toLowerCase();
   const src = document.getElementById('sourceFilter').value;
-
   const filtered = leads.filter(l => {
     const mQ  = !q   || [l.contact, l.company, l.papertype, l.destination, l.phone].some(v => (v||'').toLowerCase().includes(q));
     const mSr = !src || l.source === src;
     return mQ && mSr;
   });
 
-  document.getElementById('totalCount').textContent = filtered.length + ' lead' + (filtered.length !== 1 ? 's' : '');
+  const uniq = (arr) => [...new Set(arr)];
+  const sessionCount = uniq([...sessionAdded, ...sessionModified]).filter(id => leads.find(l=>l.id===id)).length;
+  document.getElementById('totalCount').textContent   = filtered.length + ' lead' + (filtered.length!==1?'s':'');
+  document.getElementById('sessionCount').textContent = sessionCount > 0 ? '· ' + sessionCount + ' this session' : '';
 
   const board = document.getElementById('board');
   board.innerHTML = '';
-
   STATUSES.forEach(status => {
     const col_leads = filtered.filter(l => l.status === status);
-
     const col = document.createElement('div');
-    col.className = 'col';
-    col.dataset.status = status;
-
+    col.className = 'col'; col.dataset.status = status;
     col.innerHTML = `
       <div class="col-header">
         <div class="col-dot"></div>
@@ -650,107 +451,158 @@ function render() {
         ondragover="onDragOver(event,'${status}')"
         ondragleave="onDragLeave(event)"
         ondrop="onDrop(event,'${status}')">
-        ${col_leads.length === 0
+        ${col_leads.length===0
           ? '<div class="col-empty">Drop cards here</div>'
           : col_leads.map(l => buildCard(l)).join('')}
-      </div>
-    `;
+      </div>`;
     board.appendChild(col);
   });
 }
 
 function buildCard(l) {
-  const hasGsm  = l.gsm  ? `<span>GSM ${esc(l.gsm)}</span>` : '';
-  const hasQty  = l.qty  ? `<span>📦 ${esc(l.qty)}</span>`  : '';
-  const hasDest = l.destination ? `<span>📍 ${esc(l.destination)}</span>` : '';
-  const hasNotes = l.notes ? `<div class="card-notes-preview">${esc(l.notes)}</div>` : '';
+  const meta = [
+    l.gsm  ? `<span>GSM ${esc(l.gsm)}</span>` : '',
+    l.qty  ? `<span>📦 ${esc(l.qty)}</span>`  : '',
+    l.destination ? `<span>📍 ${esc(l.destination)}</span>` : '',
+  ].filter(Boolean).join('');
+  const notes = l.notes ? `<div class="card-notes-preview">${esc(l.notes)}</div>` : '';
+  const isNew = sessionAdded.includes(l.id);
 
-  return `
-    <div class="card" id="card-${l.id}"
+  return `<div class="card" id="card-${l.id}"
       draggable="true"
       ondragstart="onDragStart(event,'${l.id}')"
       ondragend="onDragEnd(event)"
       onclick="viewLead('${l.id}')">
-      <div class="card-top">
-        <div>
-          <div class="card-contact">${esc(l.contact)}</div>
-          ${l.company ? `<div class="card-company">${esc(l.company)}</div>` : ''}
-        </div>
-        <button class="card-menu-btn" onclick="event.stopPropagation();openModal('${l.id}',null)" title="Edit">✎</button>
+    ${isNew ? '<div style="position:absolute;top:10px;right:42px;background:#22C55E;color:#fff;font-size:9px;font-weight:700;border-radius:4px;padding:1px 5px;letter-spacing:0.05em">NEW</div>' : ''}
+    <div class="card-top">
+      <div>
+        <div class="card-contact">${esc(l.contact)}</div>
+        ${l.company ? `<div class="card-company">${esc(l.company)}</div>` : ''}
       </div>
-      <div class="card-paper">${esc(l.papertype) || '—'}</div>
-      <div class="card-meta">${hasGsm}${hasQty}${hasDest}</div>
-      ${hasNotes}
-      <div class="card-footer">
-        <span class="source-tag">${esc(l.source)}</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="card-date">${fmt(l.date)}</span>
-          <button class="card-action-btn del" onclick="event.stopPropagation();deleteLead('${l.id}')" title="Delete">✕</button>
-        </div>
+      <button class="card-menu-btn" onclick="event.stopPropagation();openModal('${l.id}',null)" title="Edit">✎</button>
+    </div>
+    <div class="card-paper">${esc(l.papertype)||'—'}</div>
+    <div class="card-meta">${meta}</div>
+    ${notes}
+    <div class="card-footer">
+      <span class="source-tag">${esc(l.source)}</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="card-date">${fmt(l.date)}</span>
+        <button class="card-action-btn del" onclick="event.stopPropagation();deleteLead('${l.id}')" title="Delete">✕</button>
       </div>
     </div>
-  `;
+  </div>`;
 }
 
 // ── DRAG & DROP ──
 function onDragStart(e, id) {
-  dragId = id;
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', id);
+  dragId = id; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', id);
   setTimeout(() => { const el = document.getElementById('card-'+id); if(el) el.classList.add('dragging'); }, 0);
 }
-function onDragEnd(e) {
+function onDragEnd() {
   document.querySelectorAll('.card.dragging').forEach(el => el.classList.remove('dragging'));
   document.querySelectorAll('.col-cards.drag-over').forEach(el => el.classList.remove('drag-over'));
 }
 function onDragOver(e, status) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  const zone = document.getElementById('col-'+status);
-  if (zone) zone.classList.add('drag-over');
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+  const zone = document.getElementById('col-'+status); if(zone) zone.classList.add('drag-over');
 }
-function onDragLeave(e) {
-  if (e.currentTarget.classList) e.currentTarget.classList.remove('drag-over');
-}
+function onDragLeave(e) { if(e.currentTarget.classList) e.currentTarget.classList.remove('drag-over'); }
 function onDrop(e, status) {
   e.preventDefault();
   const id = e.dataTransfer.getData('text/plain') || dragId;
   if (!id) return;
   const lead = leads.find(l => l.id === id);
   if (lead && lead.status !== status) {
-    const prev = lead.status;
-    lead.status = status;
-    save();
-    render();
+    lead.status = status; save(); render();
+    if (!sessionModified.includes(id)) sessionModified.push(id);
     showToast(lead.contact + ' → ' + status);
+    flashExcelBanner();
   } else {
     document.querySelectorAll('.col-cards.drag-over').forEach(el => el.classList.remove('drag-over'));
   }
   dragId = null;
 }
 
+// ── CONTACT PICKER ──
+function filterContacts(q) {
+  const dd = document.getElementById('cpDropdown');
+  if (!q.trim()) { dd.classList.remove('open'); return; }
+  const matches = contacts.filter(c =>
+    (c.name||'').toLowerCase().includes(q.toLowerCase()) ||
+    (c.company||'').toLowerCase().includes(q.toLowerCase())
+  );
+  if (matches.length === 0) {
+    dd.innerHTML = '<div class="cp-none">No contacts found — fill in below</div>';
+  } else {
+    dd.innerHTML = matches.slice(0,8).map(c => `
+      <div class="cp-item" onclick="selectContact('${c.id}')">
+        <div class="cp-item-name">${esc(c.name)}</div>
+        <div class="cp-item-meta">${[c.company, c.city, c.phone].filter(Boolean).join(' · ')}</div>
+      </div>`).join('');
+  }
+  dd.classList.add('open');
+}
+
+function selectContact(id) {
+  const c = contacts.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('f-contact').value    = c.name    || '';
+  document.getElementById('f-company').value    = c.company || '';
+  document.getElementById('f-phone').value      = c.phone   || '';
+  document.getElementById('f-email').value      = c.email   || '';
+  document.getElementById('f-destination').value= c.city    || '';
+  document.getElementById('cpSearch').value     = '';
+  document.getElementById('cpDropdown').classList.remove('open');
+  document.getElementById('cpSelName').textContent = c.name;
+  document.getElementById('cpSelMeta').textContent = [c.company, c.city, c.phone].filter(Boolean).join(' · ');
+  document.getElementById('cpSelected').style.display = 'block';
+  document.getElementById('f-save-contact').checked = false;
+  document.getElementById('saveContactRow').style.opacity = '0.5';
+  showToast('Contact loaded: ' + c.name);
+}
+
+function clearContactPicker() {
+  document.getElementById('cpSearch').value = '';
+  document.getElementById('cpSelected').style.display = 'none';
+  document.getElementById('f-save-contact').checked = true;
+  document.getElementById('saveContactRow').style.opacity = '1';
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', e => {
+  const dd = document.getElementById('cpDropdown');
+  if (dd && !dd.contains(e.target) && e.target.id !== 'cpSearch') dd.classList.remove('open');
+});
+
 // ── MODAL ──
 function openModal(id, defaultStatus) {
   editId = id || null;
   document.getElementById('modalTitle').textContent = id ? 'Edit Lead' : 'New Lead';
+  clearContactPicker();
+  document.getElementById('cpSearch').value = '';
+  document.getElementById('cpDropdown').classList.remove('open');
+
+  // Show/hide contact picker only for new leads
+  document.getElementById('contactPickerBox').style.display = id ? 'none' : 'block';
+  document.getElementById('saveContactRow').style.display   = id ? 'none' : 'flex';
+
   const fields = ['contact','company','phone','email','papertype','gsm','qty','destination','source','status','notes'];
   if (id) {
-    const l = leads.find(x => x.id === id);
-    if (!l) return;
-    fields.forEach(f => { const el = document.getElementById('f-'+f); if(el) el.value = l[f] || ''; });
+    const l = leads.find(x => x.id === id); if(!l) return;
+    fields.forEach(f => { const el = document.getElementById('f-'+f); if(el) el.value = l[f]||''; });
   } else {
     fields.forEach(f => {
-      const el = document.getElementById('f-'+f);
-      if (!el) return;
-      if (f === 'status')  el.value = defaultStatus || 'New';
-      else if (f === 'source') el.value = 'IndiaMart';
+      const el = document.getElementById('f-'+f); if(!el) return;
+      if (f==='status') el.value = defaultStatus || 'New';
+      else if (f==='source') el.value = 'IndiaMart';
       else el.value = '';
     });
   }
   document.getElementById('overlay').classList.add('open');
 }
 function closeModal() { document.getElementById('overlay').classList.remove('open'); editId = null; }
-function closeOnBg(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
+function closeOnBg(e) { if(e.target===document.getElementById('overlay')) closeModal(); }
 
 function saveLead() {
   const contact   = document.getElementById('f-contact').value.trim();
@@ -772,24 +624,43 @@ function saveLead() {
     notes:       document.getElementById('f-notes').value.trim(),
   };
 
+  let lid;
   if (editId) {
     const idx = leads.findIndex(x => x.id === editId);
-    if (idx > -1) leads[idx] = { ...leads[idx], ...data };
+    if (idx > -1) { leads[idx] = { ...leads[idx], ...data }; lid = editId; }
+    if (!sessionModified.includes(editId)) sessionModified.push(editId);
     showToast('Lead updated');
   } else {
-    leads.unshift({ id: uid(), date: Date.now(), ...data });
-    showToast('Lead added');
+    lid = uid();
+    leads.unshift({ id: lid, date: Date.now(), ...data });
+    sessionAdded.push(lid);
+    showToast('Lead added ✓');
   }
-  save(); render(); closeModal();
+  save();
+
+  // Save as contact if checked
+  const saveAsContact = document.getElementById('f-save-contact');
+  if (!editId && saveAsContact && saveAsContact.checked) {
+    const existing = contacts.find(c =>
+      c.name.toLowerCase() === contact.toLowerCase() &&
+      (c.company||'').toLowerCase() === (data.company||'').toLowerCase()
+    );
+    if (!existing) {
+      contacts.unshift({ id: uid(), name: contact, company: data.company, city: data.destination, phone: data.phone, email: data.email });
+      saveContacts();
+    }
+  }
+
+  render();
+  closeModal();
+  flashExcelBanner();
 }
 
 // ── VIEW ──
 function viewLead(id) {
-  const l = leads.find(x => x.id === id);
-  if (!l) return;
+  const l = leads.find(x => x.id === id); if(!l) return;
   document.getElementById('viewTitle').textContent = l.contact + (l.company ? ' · ' + l.company : '');
   document.getElementById('viewEditBtn').onclick = () => { closeView(); openModal(id, null); };
-
   document.getElementById('viewBody').innerHTML = `
     <div class="detail-section">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
@@ -813,43 +684,156 @@ function viewLead(id) {
         <div class="detail-item"><div class="dl">Paper Type</div><div class="dv">${esc(l.papertype)||'—'}</div></div>
         <div class="detail-item"><div class="dl">GSM</div><div class="dv">${esc(l.gsm)||'—'}</div></div>
         <div class="detail-item"><div class="dl">Quantity</div><div class="dv">${esc(l.qty)||'—'}</div></div>
-        <div class="detail-item"><div class="dl">Destination</div><div class="dv">${esc(l.destination)||'—'}</div></div>
+        <div class="detail-item"><div class="dl">City</div><div class="dv">${esc(l.destination)||'—'}</div></div>
       </div>
     </div>
-    ${l.notes ? `
-    <div class="detail-section">
-      <div class="detail-section-label">Notes</div>
-      <div class="notes-block">${esc(l.notes)}</div>
-    </div>` : ''}
+    ${l.notes?`<div class="detail-section"><div class="detail-section-label">Notes</div><div class="notes-block">${esc(l.notes)}</div></div>`:''}
   `;
   document.getElementById('viewOverlay').classList.add('open');
 }
 function closeView() { document.getElementById('viewOverlay').classList.remove('open'); }
 function closeViewOnBg(e) { if(e.target===document.getElementById('viewOverlay')) closeView(); }
 
+// ── CONTACTS BOOK ──
+function openContactsBook() {
+  const body = document.getElementById('contactsBody');
+  if (contacts.length === 0) {
+    body.innerHTML = '<div class="contacts-empty">No contacts saved yet.<br>Check "Save as contact" when adding leads.</div>';
+  } else {
+    body.innerHTML = '<div class="contacts-list">' + contacts.map(c => `
+      <div class="contact-row">
+        <div class="contact-avatar">${(c.name||'?')[0].toUpperCase()}</div>
+        <div class="contact-info">
+          <div class="contact-name">${esc(c.name)}</div>
+          <div class="contact-meta">${[c.company, c.city, c.phone, c.email].filter(Boolean).join(' · ')}</div>
+        </div>
+        <button class="contact-del" onclick="deleteContact('${c.id}')" title="Delete">✕</button>
+      </div>`).join('') + '</div>';
+  }
+  document.getElementById('contactsOverlay').classList.add('open');
+}
+function closeContactsBook() { document.getElementById('contactsOverlay').classList.remove('open'); }
+function closeContactsOnBg(e) { if(e.target===document.getElementById('contactsOverlay')) closeContactsBook(); }
+function deleteContact(id) {
+  if (!confirm('Remove this contact?')) return;
+  contacts = contacts.filter(c => c.id !== id); saveContacts();
+  openContactsBook();
+  showToast('Contact removed');
+}
+
+// ── EXCEL ──
+function leadsToRows(arr) {
+  return arr.map(l => ({
+    'Contact Name': l.contact,
+    'Company':      l.company    || '',
+    'City':         l.destination|| '',
+    'Phone':        l.phone      || '',
+    'Email':        l.email      || '',
+    'Paper Type':   l.papertype  || '',
+    'GSM':          l.gsm        || '',
+    'Quantity':     l.qty        || '',
+    'Source':       l.source     || '',
+    'Status':       l.status     || '',
+    'Notes':        l.notes      || '',
+    'Date Added':   fmt(l.date),
+  }));
+}
+
+function downloadMasterExcel() {
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: All Leads
+  const ws1 = XLSX.utils.json_to_sheet(leadsToRows(leads));
+  styleSheet(ws1);
+  XLSX.utils.book_append_sheet(wb, ws1, 'All Leads');
+
+  // Sheet 2: Contacts
+  const contactRows = contacts.map(c => ({
+    'Name':    c.name    || '',
+    'Company': c.company || '',
+    'City':    c.city    || '',
+    'Phone':   c.phone   || '',
+    'Email':   c.email   || '',
+  }));
+  const ws2 = XLSX.utils.json_to_sheet(contactRows.length ? contactRows : [{'Name':'','Company':'','City':'','Phone':'','Email':''}]);
+  styleSheet(ws2);
+  XLSX.utils.book_append_sheet(wb, ws2, 'Contacts');
+
+  XLSX.writeFile(wb, 'PaperLeads-Master.xlsx');
+  showToast('Master Excel downloaded');
+}
+
+function downloadSessionExcel() {
+  const uniq = [...new Set([...sessionAdded, ...sessionModified])];
+  const sessionLeads = leads.filter(l => uniq.includes(l.id));
+  if (sessionLeads.length === 0) { showToast('No leads added or changed this session'); return; }
+
+  const wb = XLSX.utils.book_new();
+  const ws  = XLSX.utils.json_to_sheet(leadsToRows(sessionLeads));
+  styleSheet(ws);
+  XLSX.utils.book_append_sheet(wb, ws, 'Session ' + new Date().toLocaleDateString('en-IN'));
+  XLSX.writeFile(wb, 'PaperLeads-Session-' + new Date().toISOString().slice(0,10) + '.xlsx');
+  showToast('Session Excel downloaded');
+}
+
+function downloadContactsExcel() {
+  if (contacts.length === 0) { showToast('No contacts to export'); return; }
+  const wb = XLSX.utils.book_new();
+  const rows = contacts.map(c => ({ Name: c.name||'', Company: c.company||'', City: c.city||'', Phone: c.phone||'', Email: c.email||'' }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  styleSheet(ws);
+  XLSX.utils.book_append_sheet(wb, ws, 'Contacts');
+  XLSX.writeFile(wb, 'PaperLeads-Contacts.xlsx');
+  showToast('Contacts Excel downloaded');
+}
+
+function styleSheet(ws) {
+  // Set column widths
+  ws['!cols'] = [22,22,18,18,28,16,12,14,14,12,30,14].map(w => ({ wch: w }));
+}
+
+// ── EXCEL BANNER ──
+let bannerTimer = null;
+function flashExcelBanner() {
+  const b = document.getElementById('excelBanner');
+  b.classList.add('show');
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(() => b.classList.remove('show'), 6000);
+}
+function hideExcelBanner() {
+  document.getElementById('excelBanner').classList.remove('show');
+  clearTimeout(bannerTimer);
+}
+
+// ── END SESSION ──
+function endSession() {
+  const uniq = [...new Set([...sessionAdded, ...sessionModified])].filter(id => leads.find(l=>l.id===id));
+  const added    = sessionAdded.filter(id => leads.find(l=>l.id===id)).length;
+  const modified = sessionModified.filter(id => !sessionAdded.includes(id) && leads.find(l=>l.id===id)).length;
+
+  if (uniq.length === 0) {
+    if (!confirm('No changes this session. Download master Excel anyway?')) return;
+    downloadMasterExcel();
+    return;
+  }
+
+  const msg = `Session summary:\n• ${added} lead(s) added\n• ${modified} lead(s) moved/updated\n\nDownload session Excel + master Excel?`;
+  if (!confirm(msg)) return;
+  downloadSessionExcel();
+  setTimeout(downloadMasterExcel, 800);
+  showToast('Session saved. See you next time!');
+}
+
 // ── DELETE ──
 function deleteLead(id) {
   if (!confirm('Delete this lead?')) return;
-  leads = leads.filter(x => x.id !== id);
-  save(); render();
+  leads = leads.filter(x => x.id !== id); save(); render();
   showToast('Lead deleted');
 }
 
-// ── EXPORT / IMPORT ──
-function exportCSV() {
-  const headers = ['Contact','Company','Phone','Email','Paper Type','GSM','Quantity','Destination','Source','Status','Notes','Date'];
-  const rows = leads.map(l => [
-    l.contact, l.company, l.phone, l.email, l.papertype,
-    l.gsm, l.qty, l.destination, l.source, l.status, l.notes, fmt(l.date)
-  ].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(','));
-  dl('paperleads.csv', 'text/csv', [headers.join(','), ...rows].join('\n'));
-}
-function exportJSON() {
-  dl('paperleads-backup.json', 'application/json', JSON.stringify(leads, null, 2));
-  showToast('Backup saved');
-}
+// ── IMPORT ──
 function importJSON(e) {
-  const file = e.target.files[0]; if (!file) return;
+  const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
     try {
@@ -861,17 +845,12 @@ function importJSON(e) {
   };
   reader.readAsText(file); e.target.value = '';
 }
-function dl(name, type, content) {
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([content],{type}));
-  a.download = name; a.click();
-}
 
 // ── KEYBOARD ──
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeView(); }
-  if (e.key === 'n' && !document.getElementById('overlay').classList.contains('open')
-    && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') openModal(null, null);
+  if (e.key==='Escape') { closeModal(); closeView(); closeContactsBook(); }
+  if (e.key==='n' && !document.getElementById('overlay').classList.contains('open')
+    && e.target.tagName!=='INPUT' && e.target.tagName!=='TEXTAREA') openModal(null, null);
 });
 
 // ── INIT ──
